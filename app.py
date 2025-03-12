@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+import re
 from modules.analyzer import WebAttackAnalyzer
 
 # OpenAI API 키 환경 변수에서 가져오기 (실제 사용 시 환경 변수 설정 필요)
@@ -36,27 +37,66 @@ risk_color_map = {
     "높음": "🔴 높음 (High)"
 }
 
+# 공격 유형 라벨 - 정규식 순서와 일치
+ATTACK_TYPES = [
+    "SQL 인젝션",
+    "XSS(크로스 사이트 스크립팅)",
+    "디렉토리 탐색",
+    "명령어 인젝션",
+    "악성 파일 업로드 시도",
+    "LFI/RFI(로컬/원격 파일 인클루전)",
+    "기본 웹 공격(비정상적 요청)",
+    "cmd.exe 실행 시도",
+    "경로 우회 시도",
+    "시스템 디렉토리 접근 시도",
+    "웹 취약점 스캐닝(root.exe)",
+    "버퍼 오버플로우 공격",
+    "OpenWebMail 취약점 탐색",
+    "허용되지 않은 HTTP 메서드",
+    "프록시 하이재킹 시도",
+    "FrontPage/SharePoint 취약점 탐색"
+]
+
 # 세션 상태 초기화
 if "page" not in st.session_state:
     st.session_state["page"] = "main"
 
 if "analysis_result" not in st.session_state:
     st.session_state["analysis_result"] = None
+    
+if "all_detected_attacks" not in st.session_state:
+    st.session_state["all_detected_attacks"] = {}
 
 def analyze_logs(log_content):
     """로그 분석 함수"""
     try:
         # 로그 문자열로부터 공격 패턴 탐색
-        attack_logs = []
+        attack_logs_by_type = {}  # 공격 유형별로 로그를 저장할 딕셔너리
+        detected_patterns = []  # 감지된 패턴 인덱스
+        
         for line in log_content.split('\n'):
+            if not line.strip():  # 빈 줄 건너뛰기
+                continue
+                
             # 모든 패턴을 순차적으로 검사
-            for pattern in analyzer.COMPILED_PATTERNS:
+            for i, pattern in enumerate(analyzer.COMPILED_PATTERNS):
                 if pattern.search(line):
-                    attack_logs.append(line.strip())
-                    break  # 하나의 패턴이라도 매칭되면 추가하고 다음 라인으로
-
+                    # 해당 인덱스의 공격 유형 가져오기
+                    attack_type = ATTACK_TYPES[i] if i < len(ATTACK_TYPES) else f"Unknown_{i}"
+                    
+                    # 공격 유형별로 로그 저장
+                    if attack_type not in attack_logs_by_type:
+                        attack_logs_by_type[attack_type] = []
+                    
+                    attack_logs_by_type[attack_type].append(line.strip())
+                    detected_patterns.append(i)  # 감지된 패턴 인덱스 저장
+                    break  # 하나의 패턴이라도 매칭되면 다음 라인으로
+        
+        # 모든 공격 로그 저장 (UI에서 표시용)
+        st.session_state["all_detected_attacks"] = attack_logs_by_type
+        
         # 공격 패턴이 없으면 기본 응답 반환
-        if not attack_logs:
+        if not attack_logs_by_type:
             return {
                 "payload_info": "공격 패턴이 발견되지 않았습니다.",
                 "attack_type": "없음",
@@ -66,13 +106,24 @@ def analyze_logs(log_content):
                 "risk_assessment": "현재 위험 수준은 낮습니다.",
                 "detailed_mitigation": "일반적인 보안 모니터링을 계속하고 정기적인 보안 업데이트를 유지하세요."
             }
-
-        # GPT 분석 실행
-        results = analyzer.analyze_attack_logs(attack_logs)
         
-        # 결과가 있으면 첫 번째 결과 반환, 없으면 기본 응답
+        # 공격 유형별로 대표 샘플 하나씩만 선택
+        sample_logs = []
+        for attack_type, logs in attack_logs_by_type.items():
+            sample_logs.append(logs[0])  # 각 유형의 첫 번째 로그만 선택
+        
+        # GPT 분석 실행 (선택된 샘플 로그만 전송)
+        results = analyzer.analyze_attack_logs(sample_logs)
+        
+        # 결과가 있으면 상위 5개를 선택, 없으면 기본 응답
         if results and len(results) > 0:
-            return results
+            # 위험도 순으로 정렬 (높음 > 중간 > 낮음)
+            risk_order = {"높음": 3, "중간": 2, "낮음": 1, "알 수 없음": 0}
+            sorted_results = sorted(results, key=lambda x: risk_order.get(x.get("risk_level", "알 수 없음"), 0), reverse=True)
+            
+            # 상위 5개까지 선택
+            top_results = sorted_results[:min(5, len(sorted_results))]
+            return top_results
         else:
             return {
                 "payload_info": "분석 중 오류가 발생했습니다.",
@@ -155,15 +206,32 @@ def result_page():
         st.image("./image/logo.png", width=200)  # 로고 이미지 유지
 
     results = st.session_state.get("analysis_result", None)
+    all_attacks = st.session_state.get("all_detected_attacks", {})
+    
+    # 전체 탐지된 공격 요약 출력
+    total_attack_types = len(all_attacks)
+    total_attacks = sum(len(logs) for logs in all_attacks.values())
+    
+    if total_attack_types > 0:
+        st.markdown(f"## 🔍 탐지 결과 요약")
+        st.markdown(f"총 {total_attack_types}개 유형의 공격 패턴에서 {total_attacks}개의 공격 시도가 발견되었습니다.")
+        
+        if st.checkbox("전체 탐지 결과 보기"):
+            for attack_type, logs in all_attacks.items():
+                with st.expander(f"{attack_type} ({len(logs)}개)"):
+                    for i, log in enumerate(logs, 1):
+                        st.text(f"{i}. {log}")
 
+    # AI 분석 결과
     if results:
+        st.markdown("## 🧠 AI 분석 결과")
+        
         if isinstance(results, list):
             # 여러 결과가 있는 경우
-            st.markdown("## 🔎 분석 결과")
-            st.markdown(f"총 {len(results)}개의 위협이 탐지되었습니다.")
+            st.markdown(f"### 가장 위험한 상위 {len(results)}개 공격 패턴에 대한 분석")
             
             # 탭 인터페이스를 사용하여 여러 결과 표시
-            tab_labels = [f"위협 #{i+1}" for i in range(len(results))]
+            tab_labels = [f"위협 #{i+1} ({result.get('attack_type', 'N/A')})" for i, result in enumerate(results)]
             tabs = st.tabs(tab_labels)
             
             for i, (tab, result) in enumerate(zip(tabs, results)):

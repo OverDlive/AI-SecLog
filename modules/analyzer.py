@@ -8,21 +8,54 @@ class WebAttackAnalyzer:
     
     # 공격 패턴 정규식 목록
     ATTACK_PATTERNS = [
-        # SQL 인젝션 패턴
-        r"(?i)(\b(select|insert|update|delete|drop|alter|union|exec|declare|cast)\b.*\b(from|into|where|table|database)\b)|(\b(waitfor|delay|sleep)\b.*\d+)|('(''|[^'])*'(''|'|[^'])*')|(--[^\r\n]*)|(/\*[^*]*\*/)",
-        # XSS 패턴
-        r"(?i)(<script[^>]*>.*</script>|<iframe[^>]*>.*</iframe>|javascript:|alert\(|onmouseover=|onclick=|onerror=)",
-        # 디렉토리 탐색 패턴
-        r"(?i)((\.\./|\.\./\./|\.\.\\|\.\.\\\.\.\\|/etc/passwd|/etc/shadow|/proc/self/environ|/proc/\d+/fd/\d+))",
-        # 명령어 인젝션 패턴
-        r"(?i)(\||;|`|\$\(|\$\{|&&|\|\||ping -c|wget |curl |nc |netcat |ncat |bash -|sh -|python -c|chmod |chown |killall |/bin/|/dev/)",
-        # 파일 업로드 시도 패턴
-        r"(?i)(\.php|\.jsp|\.asp|\.aspx|\.exe|\.sh|\.pl|\.cgi|\.bat)(\s|$)",
-        # LFI/RFI 패턴
-        r"(?i)((\?|&)(file|page|url|path|include|dir|location|folder|doc|document|site|view|content)=)",
-        # 기본 웹 공격 패턴(비정상적 요청)
-        r"(?i)(\.htaccess|\.git/|\.svn/|\/config\.php|\?XDEBUG_SESSION_START=|acunetix|appscan)"
-    ]
+    # SQL 인젝션 패턴
+    r"(?i)(\b(select|insert|update|delete|drop|alter|union|exec|declare|cast)\b.*\b(from|into|where|table|database)\b)|(\b(waitfor|delay|sleep)\b.*\d+)|('(''|[^'])*'(''|'|[^'])*')|(--[^\r\n]*)|(/\*[^*]*\*/)",
+    
+    # XSS 패턴
+    r"(?i)(<script[^>]*>.*</script>|<iframe[^>]*>.*</iframe>|javascript:|alert\(|onmouseover=|onclick=|onerror=)",
+    
+    # 디렉토리 탐색 패턴
+    r"(?i)((\.\./|\.\./\./|\.\.\\|\.\.\\\.\.\\|/etc/passwd|/etc/shadow|/proc/self/environ|/proc/\d+/fd/\d+))",
+    
+    # 명령어 인젝션 패턴
+    r"(?i)(\||;|`|\$\(|\$\{|&&|\|\||ping -c|wget |curl |nc |netcat |ncat |bash -|sh -|python -c|chmod |chown |killall |/bin/|/dev/)",
+    
+    # 파일 업로드 시도 패턴
+    r"(?i)(\.php|\.jsp|\.asp|\.aspx|\.exe|\.sh|\.pl|\.cgi|\.bat)(\s|$)",
+    
+    # LFI/RFI 패턴
+    r"(?i)((\?|&)(file|page|url|path|include|dir|location|folder|doc|document|site|view|content)=)",
+    
+    # 기본 웹 공격 패턴(비정상적 요청)
+    r"(?i)(\.htaccess|\.git/|\.svn/|\/config\.php|\?XDEBUG_SESSION_START=|acunetix|appscan)",
+    
+    # cmd.exe 실행 시도
+    r"cmd\.exe\?\/c\+",
+    
+    # 경로 우회 시도
+    r"\.\.(%[0-9a-fA-F]{1,4}c|%[0-9a-fA-F]{1,2}\/|%[0-9a-fA-F]{1,2}af|%c[0-9a-fA-F]{1,3})",
+    
+    # 시스템 디렉토리 접근 시도
+    r"\/winnt\/system32\/",
+    
+    # 웹 취약점 스캐닝 도구(root.exe)
+    r"\/(scripts|MSADC)\/root\.exe",
+    
+    # 버퍼 오버플로우 공격 패턴
+    r"\\x(90|04H)\\x(90|04H)\\x(90|04H){10,}",
+    
+    # OpenWebMail 취약점 탐색
+    r"\/cgi-bin\/openwebmail\/openwebmail\.pl",
+    
+    # 허용되지 않은 HTTP 메서드
+    r"OPTIONS \/ HTTP\/1\.[01]",
+    
+    # 프록시 하이재킹 시도
+    r"GET http:\/\/[a-zA-Z0-9.-]+\/ HTTP",
+    
+    # FrontPage/SharePoint 관련 취약점 탐색
+    r"\/(_vti_bin\/|_mem_bin\/)|\.\.%255c"
+]
     
     def __init__(self, openai_api_key: str):
         """

@@ -1,6 +1,5 @@
 import re
 import json
-import argparse
 from openai import OpenAI
 from typing import List, Dict, Any
 
@@ -25,9 +24,6 @@ class WebAttackAnalyzer:
         r"(?i)(\.htaccess|\.git/|\.svn/|\/config\.php|\?XDEBUG_SESSION_START=|acunetix|appscan)"
     ]
     
-    # 컴파일된 정규식 패턴 목록
-    COMPILED_PATTERNS = None
-    
     def __init__(self, openai_api_key: str):
         """
         초기화 함수
@@ -40,12 +36,12 @@ class WebAttackAnalyzer:
         # 각 패턴을 개별적으로 컴파일
         self.COMPILED_PATTERNS = [re.compile(pattern) for pattern in self.ATTACK_PATTERNS]
     
-    def filter_attack_logs(self, log_file_path: str) -> List[str]:
+    def filter_attack_logs(self, log_content: str) -> List[str]:
         """
-        로그 파일에서 공격 패턴이 포함된 로그만 필터링
+        로그 내용에서 공격 패턴이 포함된 로그만 필터링
         
         Args:
-            log_file_path (str): 웹 로그 파일 경로
+            log_content (str): 웹 로그 내용
             
         Returns:
             List[str]: 공격 패턴이 탐지된 로그 리스트
@@ -53,15 +49,21 @@ class WebAttackAnalyzer:
         attack_logs = []
         
         try:
-            with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as file:
-                for line in file:
-                    # 모든 패턴을 순차적으로 검사
-                    for pattern in self.COMPILED_PATTERNS:
-                        if pattern.search(line):
-                            attack_logs.append(line.strip())
-                            break  # 하나의 패턴이라도 매칭되면 추가하고 다음 라인으로
+            # 로그를 줄 단위로 분할
+            lines = log_content.split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                if not line:  # 빈 줄 건너뛰기
+                    continue
+                    
+                # 모든 패턴을 순차적으로 검사
+                for pattern in self.COMPILED_PATTERNS:
+                    if pattern.search(line):
+                        attack_logs.append(line)
+                        break  # 하나의 패턴이라도 매칭되면 추가하고 다음 라인으로
         except Exception as e:
-            print(f"로그 파일 읽기 오류: {e}")
+            print(f"로그 내용 처리 오류: {e}")
         
         return attack_logs
     
@@ -125,22 +127,26 @@ class WebAttackAnalyzer:
         prompt = """다음 웹 로그에서 발견된 보안 공격 패턴을 분석해주세요. 
 각 로그에 대해 다음 정보를 포함하는 JSON 형식으로 응답해주세요:
 
-1. 공격 종류 (type): 공격의 유형 (SQL 인젝션, XSS, 디렉토리 탐색 등)
-2. 위험도 (risk_level): "낮음", "중간", "높음" 중 하나
-3. 대응방안 (mitigation): 이 공격을 방어하기 위한 권장 조치
+1. payload_info: HTTP 요청 정보 요약
+2. attack_type: 공격의 유형 (SQL 인젝션, XSS, 디렉토리 탐색 등)
+3. risk_level: "낮음", "중간", "높음" 중 하나
+4. mitigation: 이 공격을 방어하기 위한 간단한 권장 조치
+5. attack_description: 공격 유형 상세 설명
+6. risk_assessment: 위험도 평가 상세 설명
+7. detailed_mitigation: 대응 방안 상세 설명
 
 응답은 다음 JSON 형식을 따라주세요:
 ```
 {
   "analyses": [
     {
-    attack_description = "XSS란~" # 공격 유형 설명
-    risk_assessment = "위험도는 ~" # 위험도 평가
-    detailed_mitigation = "현재로서는 ~" # 대응 권장 사항
-    payload_info = "HTTP~"
-    attack_type = "XSS"
-    risk_level = "중간 (Medium)"
-    mitigation = "해당 페이로드 차단"
+      "payload_info": "HTTP 요청 정보",
+      "attack_type": "XSS",
+      "risk_level": "중간",
+      "mitigation": "해당 페이로드 차단",
+      "attack_description": "XSS란...",
+      "risk_assessment": "위험도는...",
+      "detailed_mitigation": "현재로서는..."
     },
     ...
   ]
@@ -174,27 +180,3 @@ class WebAttackAnalyzer:
             print(f"분석 결과가 {output_file_path}에 저장되었습니다.")
         except Exception as e:
             print(f"결과 저장 오류: {e}")
-
-def main():
-    """메인 함수"""
-    # 파일 경로와 API 키를 코드에 직접 설정
-    log_file_path = "testlog"  # 분석할 웹 로그 파일 경로
-    output_file_path = "attack_analysis.json"  # 결과를 저장할 파일 경로
-    openai_api_key = ""  # OpenAI API 키
-    
-    analyzer = WebAttackAnalyzer(openai_api_key)
-    
-    print(f"로그 파일 {log_file_path}에서 공격 패턴 탐색 중...")
-    attack_logs = analyzer.filter_attack_logs(log_file_path)
-    
-    print(f"총 {len(attack_logs)}개의 의심스러운 로그가 발견되었습니다.")
-    
-    if attack_logs:
-        print("GPT를 사용하여 로그 분석 중...")
-        results = analyzer.analyze_attack_logs(attack_logs)
-        analyzer.save_results(results, output_file_path)
-    else:
-        print("공격 패턴이 발견되지 않았습니다.")
-
-if __name__ == "__main__":
-    main()

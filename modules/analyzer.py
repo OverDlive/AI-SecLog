@@ -4,9 +4,7 @@ load_dotenv()
 import openai
 import os
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# (옵션) .env 파일에서 OPENAI_API_KEY 불러오기
+# .env 파일에서 OPENAI_API_KEY 불러오기
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def analyze_logs(log_text: str):
@@ -28,7 +26,7 @@ def analyze_logs(log_text: str):
 
     # 2) GPT API 호출
     response = openai.Completion.create(
-        engine="text-davinci-003",  # 예시
+        engine="gpt-4o",
         prompt=prompt,
         max_tokens=300,
         temperature=0.7

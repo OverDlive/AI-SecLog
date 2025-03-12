@@ -127,10 +127,11 @@ class WebAttackAnalyzer:
                 response = self.client.chat.completions.create(
                     model="gpt-4o-mini",  # 모델은 필요에 따라 변경 가능
                     messages=[
-                        {"role": "system", "content": "웹 로그에서 발견된 공격 패턴을 분석하여 공격 종류, 위험도, 대응방안을 JSON 형식으로 제공해주세요."},
+                        {"role": "system", "content": "당신은 보안 전문가로서 웹 로그에서 발견된 공격 패턴을 상세하게 분석하고 구체적인 대응 방안을 제공하는 역할을 합니다. 각 공격에 대해 즉각적인 대응 조치부터 장기적인 보안 강화 방안까지 상세히 설명해주세요. 코드 예시와 구성 파일 예시도 함께 제공하세요."},
                         {"role": "user", "content": prompt}
                     ],
-                    response_format={"type": "json_object"}
+                    response_format={"type": "json_object"},
+                    temperature=0.2  # 일관된 응답을 위해 낮은 temperature 사용
                 )
                 
                 # JSON 응답 파싱
@@ -157,16 +158,23 @@ class WebAttackAnalyzer:
         Returns:
             str: 완성된 프롬프트
         """
-        prompt = """다음 웹 로그에서 발견된 보안 공격 패턴을 분석해주세요. 
+        prompt = """다음 웹 로그에서 발견된 보안 공격 패턴을 상세히 분석해주세요. 
 각 로그에 대해 다음 정보를 포함하는 JSON 형식으로 응답해주세요:
 
-1. payload_info: HTTP 요청 정보 요약
+1. payload_info: HTTP 요청 정보 요약 (공격 패턴이 무엇인지 명확히 표시)
 2. attack_type: 공격의 유형 (SQL 인젝션, XSS, 디렉토리 탐색 등)
 3. risk_level: "낮음", "중간", "높음" 중 하나
-4. mitigation: 이 공격을 방어하기 위한 간단한 권장 조치
-5. attack_description: 공격 유형 상세 설명
-6. risk_assessment: 위험도 평가 상세 설명
-7. detailed_mitigation: 대응 방안 상세 설명
+4. mitigation: 이 공격을 방어하기 위한 간단한 권장 조치 요약
+5. attack_description: 공격 유형에 대한 상세 설명과 공격 목적, 원리, 영향 등
+6. risk_assessment: 위험도 평가 상세 설명 (취약점이 악용될 경우 어떤 위험이 있는지)
+7. immediate_actions: 즉시 취해야 할 비상 대응 조치 (3-5개 구체적인 단계 설명)
+8. technical_mitigation: 기술적 대응 방안 (웹 애플리케이션 수정, 보안 설정 등 구체적인 방법)
+9. mitigation_examples: 이 공격을 방어하기 위한 코드 예시나 명령어 (실제 구현에 도움되는 예시)
+10. security_config: 서버, WAF, 방화벽 등 보안 구성 예시 (구체적인 설정 방법)
+11. long_term_actions: 장기적인 보안 강화 방안 (정책, 프로세스, 모니터링 등)
+
+구체적인 예시와 함께 실제 시스템에 바로 적용할 수 있는 대응 방안을 제시해주세요.
+대응 방안은 예제 코드와 설정 코드를 포함하여 실무자가 바로 활용할 수 있도록 자세히 작성해주세요.
 
 응답은 다음 JSON 형식을 따라주세요:
 ```
@@ -179,7 +187,11 @@ class WebAttackAnalyzer:
       "mitigation": "해당 페이로드 차단",
       "attack_description": "XSS란...",
       "risk_assessment": "위험도는...",
-      "detailed_mitigation": "현재로서는..."
+      "immediate_actions": "1. 해당 IP 차단, 2. 세션 종료, 3. 로그 분석...",
+      "technical_mitigation": "입력값 검증 및 이스케이핑 처리...",
+      "mitigation_examples": "# 입력 검증 예시 코드\ndef validate_input(input_str):\n    ...",
+      "security_config": "# WAF 규칙 예시\nSecRule REQUEST_COOKIES|REQUEST_COOKIES_NAMES|...",
+      "long_term_actions": "1. 보안 인식 교육 강화, 2. 정기적인 취약점 스캔..."
     },
     ...
   ]

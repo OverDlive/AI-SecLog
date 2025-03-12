@@ -134,10 +134,13 @@ class WebAttackAnalyzer:
 {
   "analyses": [
     {
-      "log": "로그 원본",
-      "type": "공격 유형",
-      "risk_level": "위험도",
-      "mitigation": "대응방안"
+    attack_description = "XSS란~" # 공격 유형 설명
+    risk_assessment = "위험도는 ~" # 위험도 평가
+    detailed_mitigation = "현재로서는 ~" # 대응 권장 사항
+    payload_info = "HTTP~"
+    attack_type = "XSS"
+    risk_level = "중간 (Medium)"
+    mitigation = "해당 페이로드 차단"
     },
     ...
   ]

@@ -92,7 +92,7 @@ class WebAttackAnalyzer:
             
             try:
                 response = self.client.chat.completions.create(
-                    model="gpt-4-turbo",  # 모델은 필요에 따라 변경 가능
+                    model="gpt-4o-mini",  # 모델은 필요에 따라 변경 가능
                     messages=[
                         {"role": "system", "content": "웹 로그에서 발견된 공격 패턴을 분석하여 공격 종류, 위험도, 대응방안을 JSON 형식으로 제공해주세요."},
                         {"role": "user", "content": prompt}

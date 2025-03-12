@@ -2,6 +2,8 @@ import streamlit as st
 import json
 import os
 import re
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 from modules.analyzer import WebAttackAnalyzer
 
 # OpenAI API 키 환경 변수에서 가져오기 (실제 사용 시 환경 변수 설정 필요)
@@ -199,11 +201,84 @@ def main():
                 st.warning("⚠️ 로그를 입력하거나 파일을 업로드하세요.")
 
 
+def get_font_path():
+    """운영체제에 맞는 한글 폰트 경로 자동 탐색"""
+    if os.name == "nt":  # Windows
+        return "C:/Windows/Fonts/malgun.ttf"  # 맑은 고딕
+
+
 def result_page():
+
     """분석 결과 페이지"""
     col1, col2, col3 = st.columns([1.5, 1, 1])  
     with col2:
-        st.image("./image/logo.png", width=200)  # 로고 이미지 유지
+        st.image("./image/logo.png", width=200)  
+
+    results = st.session_state.get("analysis_result", None)
+
+    if results:
+        total_threats = len(results)  # 총 위협 개수 계산
+        risk_counts = {"높음": 0, "중간": 0, "낮음": 0}
+
+        for result in results:
+            risk_level = result.get('risk_level', '알 수 없음')
+            if risk_level in risk_counts:
+                risk_counts[risk_level] += 1
+
+        # 🚨 총 위협 개수 강조 카드 (크기 조정)
+        st.markdown(
+            f"""
+            <div style="background-color: #BB86FC; padding: 10px; border-radius: 8px; text-align: center; color: white; font-size:16px;">
+                <h3>🚨 총 {total_threats}개의 위협 탐지</h3>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # 📊 위험 등급별 개수 그래프와 카드 높이 맞추기
+        col1, col2 = st.columns([1, 1])  # 그래프 크기 축소, 카드 크기 맞춤
+
+        with col1:
+            # 🔹 한글 폰트 설정 (한글 깨짐 방지)
+            font_path = get_font_path()
+            font_prop = fm.FontProperties(fname=font_path, size=9) if font_path else None
+
+            fig, ax = plt.subplots(figsize=(4, 2.5))  # 그래프 크기 조정 (50% 축소)
+            ax.bar(risk_counts.keys(), risk_counts.values(), color=['red', 'yellow', 'green'])
+            ax.set_title("위험 등급별 위협 개수", fontproperties=font_prop, fontsize=10)
+            ax.set_ylabel("위협 개수", fontproperties=font_prop, fontsize=8)
+            plt.xticks(fontproperties=font_prop, fontsize=8)  # 한글 깨짐 방지
+            plt.yticks(fontsize=8)
+            st.pyplot(fig)
+
+        with col2:
+            # 카드 스타일 조정 (높이 & 크기 일치)
+            card_style = "padding: 10px; border-radius: 8px; text-align: center; font-size:20px; font-weight:bold; height: 152px; display: flex; align-items: center; justify-content: center;"
+            
+            st.markdown(
+                f"""
+                <div style="background-color: #FF4C4C; {card_style} color: white; margin-bottom: 6px;">
+                    🔴 높은 위험 <span style="font-size:18px; margin-left:8px;">{risk_counts["높음"]}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                f"""
+                <div style="background-color: #FFB74D; {card_style} color: black; margin-bottom: 6px;">
+                    🟡 중간 위험 <span style="font-size:18px; margin-left:8px;">{risk_counts["중간"]}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                f"""
+                <div style="background-color: #66BB6A; {card_style} color: white;">
+                    🟢 낮은 위험 <span style="font-size:18px; margin-left:8px;">{risk_counts["낮음"]}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     results = st.session_state.get("analysis_result", None)
     all_attacks = st.session_state.get("all_detected_attacks", {})

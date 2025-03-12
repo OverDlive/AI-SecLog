@@ -1,0 +1,50 @@
+{
+  "total_attacks_found": 5,
+  "analyses": [
+    {
+      "attack_description": "SQL 인젝션은 악의적 사용자가 SQL 쿼리를 조작하여 데이터베이스에서 민감한 정보를 추출하거나 데이터를 조작하는 공격입니다.",
+      "risk_assessment": "이 공격은 데이터베이스의 무결성과 기밀성에 큰 위험을 초래할 수 있습니다.",
+      "detailed_mitigation": "매개변수화된 쿼리 사용, 사용자 입력의 엄격한 검증 및 이스케이핑, 오류 메시지의 자세한 정보 노출 피하기",
+      "payload_info": "id=1' OR '1'='1",
+      "attack_type": "SQL Injection",
+      "risk_level": "높음",
+      "mitigation": "매개변수화된 쿼리 사용, 입력 검증"
+    },
+    {
+      "attack_description": "XSS(Cross-Site Scripting)는 공격자가 웹 사이트에 악성 스크립트를 주입하여 다른 사용자의 브라우저에서 실행되게 하는 공격입니다.",
+      "risk_assessment": "이 공격은 사용자 세션 도용, 웹사이트의 무결성 훼손 등을 유발할 수 있습니다.",
+      "detailed_mitigation": "사용자 제공 데이터에 대한 출력 대해 HTML 인코딩 실행, 안전하지 않은 데이터의 브라우저에서의 실행을 방지",
+      "payload_info": "<script>alert(document.cookie)</script>",
+      "attack_type": "XSS",
+      "risk_level": "중간",
+      "mitigation": "XSS 필터 사용, 콘텐츠 보안 정책(CSP) 구현"
+    },
+    {
+      "attack_description": "디렉토리 탐색(또는 경로 순회) 공격은 공격자가 서버의 디렉토리 구조를 탐색하여 파일이나 디렉토리에 무단으로 접근하려는 시도입니다.",
+      "risk_assessment": "이 방법을 통해 공격자는 시스템 파일이나 중요한 데이터에 접근할 수 있어 심각한 보안 위험을 유발할 수 있습니다.",
+      "detailed_mitigation": "사용자 입력을 기반으로 파일에 접근할 때 화이트리스트 방식을 사용하여 검증, 절대 경로 대신 상대 경로 사용 권장",
+      "payload_info": "file=../../../etc/passwd",
+      "attack_type": "Directory Traversal",
+      "risk_level": "높음",
+      "mitigation": "사용자 입력 경로 검증"
+    },
+    {
+      "attack_description": "파일 업로드 취약점을 이용한 공격은 악의적인 사용자가 서버에 해로운 파일을 업로드하여 실행될 수 있게 하는 공격입니다.",
+      "risk_assessment": "업로드된 악성 파일은 웹서버를 침해할 수 있는 권한을 공격자에게 부여할 수 있습니다.",
+      "detailed_mitigation": "업로드된 파일의 확장자, MIME 타입, 내용 검사, 서버측에서 실행 권한 제거",
+      "payload_info": "filename=shell.php",
+      "attack_type": "Malicious File Upload",
+      "risk_level": "높음",
+      "mitigation": "파일 업로드 검증 및 실행 권한 제한"
+    },
+    {
+      "attack_description": "서버 측 요청 위조(SSRF)는 공격자가 웹 애플리케이션을 조작하여 서버가 악의적인 외부 시스템과 통신하도록 만드는 공격입니다.",
+      "risk_assessment": "SSRF는 내부 시스템을 공격하려는 중간 단계로 사용될 수 있습니다.",
+      "detailed_mitigation": "외부 리소스로의 요청 필터링, 외부 URL 접근시 화이트리스트 방식 적용",
+      "payload_info": "page=http://malicious-site.com/backdoor.php",
+      "attack_type": "Server Side Request Forgery (SSRF)",
+      "risk_level": "높음",
+      "mitigation": "외부 리소스 접근 통제"
+    }
+  ]
+}

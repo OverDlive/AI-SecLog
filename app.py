@@ -19,16 +19,49 @@ st.set_page_config(page_title="AI 기반 보안 로그 분석기", layout="wide"
 st.markdown("""
     <style>
         /* 다크 모드 스타일 */
-        body, .stApp { background-color: #121212; color: white; }
+        body, .stApp { background-color: #121212; color: white !important; }
         .stTextArea textarea, .stTextInput input, .stFileUploader { background-color: #1E1E1E; color: white; border-radius: 8px; }
         .stButton>button { background-color: #BB86FC; color: white; border-radius: 10px; width: 100%; text-align: center; }
-        .stRadio label { color: white; }
-
+        .stRadio label, .stCheckbox label, .stSelectbox label { color: white !important; }
+        
+        /* 모든 텍스트 요소에 하얀색 적용 */
+        p, span, label, div, h1, h2, h3, h4, h5, h6, li, td, th { color: white !important; }
+        .stMarkdown, .stText { color: white !important; }
+        
+        /* 탭 텍스트 색상 */
+        .stTabs [data-baseweb="tab"] { color: white !important; }
+        
+        /* 확장자 헤더 색상 */
+        .streamlit-expanderHeader { color: white !important; }
+        
         /* 이미지 중앙 정렬 */
         .stImage img { display: block; margin: auto; }
 
         /* 버튼 가운데 정렬 */
         .stButton { display: flex; justify-content: center; }
+        
+        /* 코드 블록 스타일 완전 재정의 */
+        pre {
+            background-color: #2B2B2B !important;
+            padding: 12px !important;
+            border-radius: 5px !important;
+            border-left: 5px solid #BB86FC !important;
+            margin-bottom: 20px !important;
+            white-space: pre-wrap !important;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+        }
+        
+        /* 코드 블록 내부 텍스트 색상 강제 지정 */
+        code, pre code, .stCode code, pre span {
+            color: #11F945 !important; /* 밝은 녹색으로 변경 */
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+        }
+        
+        /* 코드 블록 색상이 override 되지 않도록 최대 우선순위 지정 */
+        .language-python, .language-apache, .language-bash, .language-html, .language-javascript {
+            color: #11F945 !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -127,7 +160,7 @@ def analyze_logs(log_content):
             top_results = sorted_results[:min(5, len(sorted_results))]
             return top_results
         else:
-            return {
+            return [{
                 "payload_info": "분석 중 오류가 발생했습니다.",
                 "attack_type": "알 수 없음",
                 "risk_level": "중간",
@@ -135,11 +168,11 @@ def analyze_logs(log_content):
                 "attack_description": "로그에서 의심스러운 패턴이 발견되었으나 정확한 분석에 실패했습니다.",
                 "risk_assessment": "정확한 평가를 위해 추가 조사가 필요합니다.",
                 "detailed_mitigation": "로그를 보안 전문가에게 전달하여 자세한 분석을 의뢰하세요."
-            }
+            }]
             
     except Exception as e:
         st.error(f"분석 중 오류 발생: {str(e)}")
-        return {
+        return [{
             "payload_info": f"오류: {str(e)}",
             "attack_type": "오류 발생",
             "risk_level": "알 수 없음",
@@ -147,13 +180,16 @@ def analyze_logs(log_content):
             "attack_description": "로그 분석 중 오류가 발생했습니다.",
             "risk_assessment": "오류로 인해 위험 평가를 수행할 수 없습니다.",
             "detailed_mitigation": "시스템 로그를 확인하고 애플리케이션을 재시작해 보세요."
-        }
+        }]
 
 def main():
     """로그 입력 및 분석 페이지"""
     col1, col2, col3 = st.columns([1.5, 1, 1])  
     with col2:
-        st.image("./image/logo.png", width=200)  # 로고 이미지 중앙 정렬
+        try:
+            st.image("./image/logo.png", width=200)  # 로고 이미지 중앙 정렬
+        except:
+            st.title("AI 기반 보안 로그 분석기")  # 이미지가 없는 경우 대체 텍스트
 
     st.markdown("<p style='text-align: center;'>보안 로그를 입력하거나 파일을 업로드하면 AI가 위협 수준을 분석하고 대응 방법을 제안합니다.</p>", unsafe_allow_html=True)
 
@@ -203,27 +239,56 @@ def main():
 
 def get_font_path():
     """운영체제에 맞는 한글 폰트 경로 자동 탐색"""
-    if os.name == "nt":  # Windows
-        return "C:/Windows/Fonts/malgun.ttf"  # 맑은 고딕
+    try:
+        if os.name == "nt":  # Windows
+            font_path = "C:/Windows/Fonts/malgun.ttf"  # 맑은 고딕
+            if os.path.exists(font_path):
+                return font_path
+        
+        # macOS
+        mac_font_paths = [
+            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+            "/Library/Fonts/AppleGothic.ttf"
+        ]
+        for path in mac_font_paths:
+            if os.path.exists(path):
+                return path
+                
+        # Linux
+        linux_font_paths = [
+            "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
+        ]
+        for path in linux_font_paths:
+            if os.path.exists(path):
+                return path
+    except:
+        pass
+    
+    return None  # 적절한 폰트를 찾지 못한 경우
 
 
 def result_page():
-
     """분석 결과 페이지"""
     col1, col2, col3 = st.columns([1.5, 1, 1])  
     with col2:
-        st.image("./image/logo.png", width=200)  
+        try:
+            st.image("./image/logo.png", width=200)
+        except:
+            st.title("AI 기반 보안 로그 분석기")  # 이미지가 없는 경우 대체 텍스트
 
     results = st.session_state.get("analysis_result", None)
 
-    if results:
+    if results and isinstance(results, list) and len(results) > 0:
         total_threats = len(results)  # 총 위협 개수 계산
-        risk_counts = {"높음": 0, "중간": 0, "낮음": 0}
+        risk_counts = {"높음": 0, "중간": 0, "낮음": 0, "알 수 없음": 0}
 
         for result in results:
             risk_level = result.get('risk_level', '알 수 없음')
             if risk_level in risk_counts:
                 risk_counts[risk_level] += 1
+            else:
+                risk_counts["알 수 없음"] += 1
 
         # 🚨 총 위협 개수 강조 카드 (크기 조정)
         st.markdown(
@@ -239,38 +304,94 @@ def result_page():
         col1, col2 = st.columns([1, 1])  # 그래프 크기 축소, 카드 크기 맞춤
 
         with col1:
-            # 🔹 한글 폰트 설정 (한글 깨짐 방지)
-            font_path = get_font_path()
-            font_prop = fm.FontProperties(fname=font_path, size=9) if font_path else None
-
-            fig, ax = plt.subplots(figsize=(4, 2.5))  # 그래프 크기 조정 (50% 축소)
-            ax.bar(risk_counts.keys(), risk_counts.values(), color=['red', 'yellow', 'green'])
-            ax.set_title("위험 등급별 위협 개수", fontproperties=font_prop, fontsize=10)
-            ax.set_ylabel("위협 개수", fontproperties=font_prop, fontsize=8)
-            plt.xticks(fontproperties=font_prop, fontsize=8)  # 한글 깨짐 방지
-            plt.yticks(fontsize=8)
-            st.pyplot(fig)
+            try:
+                # 🔹 한글 폰트 설정 (한글 깨짐 방지)
+                font_path = get_font_path()
+                
+                # 그래프 스타일 설정 - 다크 모드
+                plt.style.use('dark_background')
+                
+                # 그래프 그리기 - 높이를 정확히 설정하여 카드와 일치시킴
+                fig, ax = plt.subplots(figsize=(4, 2.8))  # 높이를 약간 늘려 190px에 맞춤
+                fig.patch.set_facecolor('#121212')  # 배경색 설정
+                ax.set_facecolor('#1E1E1E')  # 차트 영역 배경색
+                
+                # 데이터 필터링 - '알 수 없음' 제외하고 그래프 작성
+                plot_data = {k: v for k, v in risk_counts.items() if k != "알 수 없음"}
+                
+                # 색상 매핑
+                colors = {'높음': 'red', '중간': 'yellow', '낮음': 'green'}
+                
+                # 그래프 그리기
+                bars = ax.bar(plot_data.keys(), plot_data.values(), color=[colors[k] for k in plot_data.keys()])
+                
+                # 그리드 설정
+                ax.grid(color='#333333', linestyle='--', linewidth=0.5, alpha=0.7)
+                
+                # 텍스트 색상 설정 - 모든 텍스트 하얀색으로
+                text_color = 'white'
+                
+                # 한글 폰트 설정
+                if font_path:
+                    font_prop = fm.FontProperties(fname=font_path, size=9)
+                    ax.set_title("위험 등급별 위협 개수", fontproperties=font_prop, fontsize=10, color=text_color)
+                    ax.set_ylabel("위협 개수", fontproperties=font_prop, fontsize=8, color=text_color)
+                    plt.xticks(fontproperties=font_prop, fontsize=8, color=text_color)
+                else:
+                    # 폰트가 없는 경우 영문으로 대체
+                    ax.set_title("Threats by Risk Level", fontsize=10, color=text_color)
+                    ax.set_ylabel("Count", fontsize=8, color=text_color)
+                    plt.xticks(fontsize=8, color=text_color)
+                
+                plt.yticks(fontsize=8, color=text_color)
+                
+                # 테두리 색상 설정
+                for spine in ax.spines.values():
+                    spine.set_color('#555555')
+                
+                # 그래프 출력
+                st.pyplot(fig)
+                
+            except Exception as e:
+                st.error(f"그래프 생성 중 오류 발생: {str(e)}")
+                st.text(f"위험 등급별 개수: 높음 {risk_counts['높음']}, 중간 {risk_counts['중간']}, 낮음 {risk_counts['낮음']}")
 
         with col2:
-            # 카드 스타일 조정 (높이 & 크기 일치)
-            card_style = "padding: 10px; border-radius: 8px; text-align: center; font-size:20px; font-weight:bold; height: 152px; display: flex; align-items: center; justify-content: center;"
+            # 카드 컨테이너를 그래프 높이에 맞추기 (약 190px)
+            container_style = "display: flex; flex-direction: column; justify-content: space-between; height: 190px;"
             
+            # 개별 카드 스타일 (컨테이너 내에서 균등하게 분배)
+            card_style = "padding: 8px; border-radius: 8px; text-align: center; font-size:18px; font-weight:bold; display: flex; align-items: center; justify-content: center; margin-bottom: 0px; flex: 1;"
+            
+            # 카드 컨테이너 시작
             st.markdown(
                 f"""
-                <div style="background-color: #FF4C4C; {card_style} color: white; margin-bottom: 6px;">
+                <div style="{container_style}">
+                """, 
+                unsafe_allow_html=True
+            )
+            
+            # 높은 위험 카드
+            st.markdown(
+                f"""
+                <div style="background-color: #FF4C4C; {card_style} color: white;">
                     🔴 높은 위험 <span style="font-size:18px; margin-left:8px;">{risk_counts["높음"]}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+            
+            # 중간 위험 카드
             st.markdown(
                 f"""
-                <div style="background-color: #FFB74D; {card_style} color: black; margin-bottom: 6px;">
+                <div style="background-color: #FFB74D; {card_style} color: white;">
                     🟡 중간 위험 <span style="font-size:18px; margin-left:8px;">{risk_counts["중간"]}</span>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+            
+            # 낮은 위험 카드
             st.markdown(
                 f"""
                 <div style="background-color: #66BB6A; {card_style} color: white;">
@@ -279,8 +400,21 @@ def result_page():
                 """,
                 unsafe_allow_html=True
             )
+            
+            # 알 수 없음 카드 (필요한 경우)
+            if risk_counts["알 수 없음"] > 0:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #9E9E9E; {card_style} color: white;">
+                        ⚪ 알 수 없음 <span style="font-size:18px; margin-left:8px;">{risk_counts["알 수 없음"]}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            # 카드 컨테이너 종료
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    results = st.session_state.get("analysis_result", None)
     all_attacks = st.session_state.get("all_detected_attacks", {})
     
     # 전체 탐지된 공격 요약 출력
@@ -301,7 +435,7 @@ def result_page():
     if results:
         st.markdown("## 🧠 AI 분석 결과")
         
-        if isinstance(results, list):
+        if isinstance(results, list) and len(results) > 0:
             # 여러 결과가 있는 경우
             st.markdown(f"### 가장 위험한 상위 {len(results)}개 공격 패턴에 대한 분석")
             
@@ -321,8 +455,38 @@ def result_page():
                     st.markdown("### 📖 상세 설명")
                     st.markdown(f"**📝 공격 설명:** {result.get('attack_description', 'N/A')}")
                     st.markdown(f"**📊 위험 평가:** {result.get('risk_assessment', 'N/A')}")
-                    st.markdown(f"**🔧 대응 상세 설명:** {result.get('detailed_mitigation', 'N/A')}")
-        else:
+                    
+                    # 대응 방안 섹션을 확장자(expander)로 표시하여 더 많은 공간 확보
+                    with st.expander("**🔧 상세 대응 방안**", expanded=True):
+                        st.markdown(f"**즉시 조치사항:** {result.get('immediate_actions', '상세 대응 방안 참조')}")
+                        st.markdown(f"**기술적 대응:** {result.get('technical_mitigation', result.get('detailed_mitigation', 'N/A'))}")
+                        
+                        # 코드 예시가 있는 경우 표시
+                        if result.get('mitigation_examples'):
+                            st.markdown("**구현 예시:**")
+                            
+                            # 코드 블록 직접 HTML로 삽입
+                            code_html = f"""
+                            <pre style="background-color: #2B2B2B; color: #11F945; padding: 12px; border-radius: 5px; border-left: 5px solid #BB86FC;">
+                            <code style="color: #11F945; font-family: monospace;">{result.get('mitigation_examples').replace('<', '&lt;').replace('>', '&gt;')}</code>
+                            </pre>
+                            """
+                            st.markdown(code_html, unsafe_allow_html=True)
+                        
+                        # 보안 구성 예시가 있는 경우 표시
+                        if result.get('security_config'):
+                            st.markdown("**보안 구성 예시:**")
+                            
+                            # 코드 블록 직접 HTML로 삽입
+                            config_html = f"""
+                            <pre style="background-color: #2B2B2B; color: #11F945; padding: 12px; border-radius: 5px; border-left: 5px solid #BB86FC;">
+                            <code style="color: #11F945; font-family: monospace;">{result.get('security_config').replace('<', '&lt;').replace('>', '&gt;')}</code>
+                            </pre>
+                            """
+                            st.markdown(config_html, unsafe_allow_html=True)
+                            
+                        st.markdown(f"**장기적 대응:** {result.get('long_term_actions', '추가적인 보안 강화 방안을 검토하세요.')}")
+        elif isinstance(results, dict):
             # 단일 결과인 경우 (기존 코드)
             result = results
             st.markdown("---")
@@ -338,6 +502,8 @@ def result_page():
             st.markdown(f"**📝 공격 설명:** {result.get('attack_description', 'N/A')}")
             st.markdown(f"**📊 위험 평가:** {result.get('risk_assessment', 'N/A')}")
             st.markdown(f"**🔧 대응 상세 설명:** {result.get('detailed_mitigation', 'N/A')}")
+        else:
+            st.warning("⚠️ 결과 데이터가 예상 형식과 다릅니다.")
 
         # 돌아가기 버튼
         col1, col2, col3 = st.columns([1, 1, 1])
